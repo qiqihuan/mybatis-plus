@@ -33,7 +33,7 @@ public class MySqlDialect implements IDialect {
         // 按from拆分
         String[] froms = originalSql.split("from");
         // 按空格拆分
-        String[] fragment = originalSql.split(" ");
+        String[] fragment = originalSql.split(StringPool.SPACE);
         int tableIndex = originalSql.indexOf("from") + 1;
         String tableName = fragment[tableIndex];
         String selectStr = froms[0];
@@ -42,7 +42,7 @@ public class MySqlDialect implements IDialect {
         String[] where = originalSql.split(tableName);
         StringBuilder stringBuilder = new StringBuilder(selectStr);
         // 拼接sql
-        stringBuilder.append(" FROM ( select id from ").append(tableName)
+        stringBuilder.append(" from ( select id from ").append(tableName)
             .append(" limit ")
             .append(FIRST_MARK)
             .append(StringPool.COMMA)
