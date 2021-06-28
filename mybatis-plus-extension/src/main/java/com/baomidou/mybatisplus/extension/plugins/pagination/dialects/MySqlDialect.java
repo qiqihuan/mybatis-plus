@@ -28,12 +28,32 @@ public class MySqlDialect implements IDialect {
 
     @Override
     public DialectModel buildPaginationSql(String originalSql, long offset, long limit) {
-        StringBuilder sql = new StringBuilder(originalSql).append(" LIMIT ").append(FIRST_MARK);
-        if (offset != 0L) {
-            sql.append(StringPool.COMMA).append(SECOND_MARK);
-            return new DialectModel(sql.toString(), offset, limit).setConsumerChain();
-        } else {
-            return new DialectModel(sql.toString(), limit).setConsumer(true);
+        // 转小写，避免截取出错
+        originalSql = originalSql.toLowerCase();
+        // 按from拆分
+        String[] froms = originalSql.split("from");
+        // 按空格拆分
+        String[] fragment = originalSql.split(" ");
+        int tableIndex = originalSql.indexOf("from") + 1;
+        String tableName = fragment[tableIndex];
+        String selectStr = froms[0];
+        // 替换冲突字
+        selectStr = selectStr.replace("id", "t2.id");
+        String[] where = originalSql.split(tableName);
+        StringBuilder stringBuilder = new StringBuilder(selectStr);
+        // 拼接sql
+        stringBuilder.append(" FROM ( select id from ").append(tableName)
+            .append(" limit ")
+            .append(FIRST_MARK)
+            .append(StringPool.COMMA)
+            .append(SECOND_MARK)
+            .append(" ) t1 inner join ")
+            .append(tableName)
+            .append(" t2 on t1.id = t2.id ");
+        // 如果有where判断，就拼接
+        if (where.length > 1) {
+            stringBuilder.append(where[1].replace("id", "t2.id"));
         }
+        return new DialectModel(stringBuilder.toString(), offset, limit).setConsumerChain();
     }
 }
